@@ -1,30 +1,72 @@
-import { TextInput, TextInputProps, View, Text } from 'react-native';
+import {
+  TextInput,
+  TextInputProps,
+  View,
+  Text,
+  StyleSheet,
+  StyleProp,
+  ViewStyle,
+  TextStyle,
+} from "react-native"
 
 interface InputProps extends TextInputProps {
-  label?: string;
-  error?: string;
+  label?: string
+  error?: string
+  containerStyle?: StyleProp<ViewStyle>
+  labelStyle?: StyleProp<TextStyle>
+  inputStyle?: StyleProp<TextStyle>
+  errorStyle?: StyleProp<TextStyle>
 }
 
-export function Input({ label, error, className = '', ...props }: InputProps) {
+export function Input({
+  label,
+  error,
+  containerStyle,
+  labelStyle,
+  inputStyle,
+  errorStyle,
+  placeholderTextColor,
+  ...props
+}: InputProps) {
   return (
-    <View className="w-full">
-      {label && (
-        <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          {label}
-        </Text>
-      )}
+    <View style={[styles.container, containerStyle]}>
+      {label && <Text style={[styles.label, labelStyle]}>{label}</Text>}
       <TextInput
-        className={`border rounded-lg px-4 py-3 text-base ${
-          error
-            ? 'border-red-500'
-            : 'border-gray-300 dark:border-gray-600'
-        } bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${className}`}
-        placeholderTextColor="#9ca3af"
+        style={[styles.input, error ? styles.inputError : null, inputStyle]}
+        placeholderTextColor={placeholderTextColor ?? "#6B7280"}
         {...props}
       />
-      {error && (
-        <Text className="text-sm text-red-500 mt-1">{error}</Text>
-      )}
+      {error && <Text style={[styles.errorText, errorStyle]}>{error}</Text>}
     </View>
-  );
+  )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    width: "100%",
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#D1D5DB",
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#2A2A35",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    backgroundColor: "#0F1117",
+    color: "#FFFFFF",
+  },
+  inputError: {
+    borderColor: "#EF4444",
+  },
+  errorText: {
+    marginTop: 6,
+    fontSize: 12,
+    color: "#EF4444",
+  },
+})

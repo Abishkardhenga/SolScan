@@ -1,436 +1,295 @@
-import { useState } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
   StyleSheet,
-} from 'react-native';
-import { useAuth } from '@/hooks/useAuth';
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-// ============================================
-// Helpers
-// ============================================
-
-const shortId = (id: string) => {
-  if (id.length <= 14) return id;
-  return `${id.slice(0, 6)}···${id.slice(-6)}`;
-};
-
-// ============================================
-// Settings Screen
-// ============================================
+  Text,
+  View,
+  Switch,
+  TouchableOpacity,
+  Alert,
+  ScrollView,
+} from "react-native"
+import { SafeAreaView } from "react-native-safe-area-context"
+import { Ionicons } from "@expo/vector-icons"
+import { useRouter } from "expo-router"
+import { useWalletStore } from "../../src/stores/wallet-store"
+import { useAuth } from "@/hooks/useAuth"
 
 export default function SettingsScreen() {
-  const colorScheme = useColorScheme();
-  const { user, signOut } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const router = useRouter()
+  const { user, signOut } = useAuth()
+  const isDevnet = useWalletStore((s) => s.isDevnet)
+  const toggleNetwork = useWalletStore((s) => s.toggleNetwork)
+  const favorites = useWalletStore((s) => s.favorites)
+  const searchHistory = useWalletStore((s) => s.searchHistory)
+  const clearHistory = useWalletStore((s) => s.clearHistory)
 
-  const handleSignOut = async () => {
-    setLoading(true);
-    try {
-      await signOut();
-    } catch (error) {
-      console.error('Sign out error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const initials = user?.email
-    ? user.email.substring(0, 2).toUpperCase()
-    : '??';
-
-  const memberSince = user?.metadata.creationTime
-    ? new Date(user.metadata.creationTime).toLocaleDateString('en-US', {
-        month: 'long',
-        year: 'numeric',
-      })
-    : 'N/A';
+  const accountEmail = user?.email ?? "Not signed in"
+  const accountId = user?.uid ?? "-"
+  const createdAt = user?.metadata?.creationTime ?? "-"
 
   return (
-    <SafeAreaView style={s.safe}>
+    <SafeAreaView style={s.safe} edges={["top"]}>
       <ScrollView style={s.scroll}>
-        {/* Header */}
         <Text style={s.title}>Settings</Text>
-        <Text style={s.subtitle}>Manage your account & preferences</Text>
+        <Text style={s.subtitle}>Configure your wallet explorer</Text>
 
-        {/* Profile Card */}
-        <View style={s.profileCard}>
-          <View style={s.profileHeader}>
-            <View style={s.avatar}>
-              <Text style={s.avatarText}>{initials}</Text>
-            </View>
-            <View style={s.profileInfo}>
-              <Text style={s.profileEmail} numberOfLines={1}>
-                {user?.email ?? 'Not signed in'}
-              </Text>
-              <Text style={s.profileMeta}>Member since {memberSince}</Text>
+        {/* account section */}
+        <Text style={s.sectionTitle}>Account</Text>
+        <View style={s.card}>
+          <View style={s.row}>
+            <View style={s.rowLeft}>
+              <View style={s.iconBox}>
+                <Ionicons name="mail" size={20} color="#14F195" />
+              </View>
+              <View>
+                <Text style={s.label}>Email</Text>
+                <Text style={s.sublabel}>{accountEmail}</Text>
+              </View>
             </View>
           </View>
 
           <View style={s.divider} />
 
-          {/* Info Rows */}
-          <View style={s.infoRow}>
-            <Text style={s.infoLabel}>User ID</Text>
-            <View style={s.idBadge}>
-              <Text style={s.idText}>
-                {user?.uid ? shortId(user.uid) : 'N/A'}
-              </Text>
+          <View style={s.row}>
+            <View style={s.rowLeft}>
+              <View style={s.iconBox}>
+                <Ionicons name="finger-print" size={20} color="#14F195" />
+              </View>
+              <View>
+                <Text style={s.label}>Account ID</Text>
+                <Text style={s.sublabel}>{accountId}</Text>
+              </View>
             </View>
           </View>
 
-          <View style={s.infoRow}>
-            <Text style={s.infoLabel}>Email Verified</Text>
-            <View
-              style={[
-                s.statusBadge,
-                user?.emailVerified ? s.statusGreen : s.statusYellow,
-              ]}
-            >
-              <Text
-                style={[
-                  s.statusText,
-                  user?.emailVerified ? s.statusGreenText : s.statusYellowText,
-                ]}
-              >
-                {user?.emailVerified ? 'Verified' : 'Unverified'}
-              </Text>
-            </View>
-          </View>
+          <View style={s.divider} />
 
-          <View style={s.infoRow}>
-            <Text style={s.infoLabel}>Network</Text>
-            <View style={s.networkBadge}>
-              <View style={s.networkDot} />
-              <Text style={s.networkText}>Mainnet</Text>
+          <View style={s.row}>
+            <View style={s.rowLeft}>
+              <View style={s.iconBox}>
+                <Ionicons name="calendar" size={20} color="#14F195" />
+              </View>
+              <View>
+                <Text style={s.label}>Created</Text>
+                <Text style={s.sublabel}>{createdAt}</Text>
+              </View>
             </View>
           </View>
         </View>
 
-        {/* Preferences Section */}
-        <Text style={s.sectionTitle}>PREFERENCES</Text>
+        {/* network section */}
+        <Text style={s.sectionTitle}>Network</Text>
         <View style={s.card}>
-          <View style={s.settingRow}>
-            <View style={s.settingIconWrap}>
-              <Text style={s.settingIcon}>◑</Text>
+          <View style={s.row}>
+            <View style={s.rowLeft}>
+              <View style={[s.iconBox, isDevnet && s.iconBoxDevnet]}>
+                <Ionicons
+                  name={isDevnet ? "flask" : "globe"}
+                  size={20}
+                  color={isDevnet ? "#F59E0B" : "#14F195"}
+                />
+              </View>
+              <View>
+                <Text style={s.label}>{isDevnet ? "Devnet" : "Mainnet"}</Text>
+                <Text style={s.sublabel}>
+                  {isDevnet
+                    ? "Testing network (free SOL)"
+                    : "Production network"}
+                </Text>
+              </View>
             </View>
-            <View style={s.settingContent}>
-              <Text style={s.settingLabel}>Theme</Text>
-              <Text style={s.settingDesc}>Follows system appearance</Text>
-            </View>
-            <View style={s.settingValueBadge}>
-              <Text style={s.settingValueText}>
-                {colorScheme === 'dark' ? 'Dark' : 'Light'}
-              </Text>
-            </View>
+            <Switch
+              value={isDevnet}
+              onValueChange={toggleNetwork}
+              trackColor={{ true: "#14F195", false: "#2A2A35" }}
+              thumbColor="#FFFFFF"
+            />
           </View>
         </View>
 
-        {/* App Info Section */}
-        <Text style={s.sectionTitle}>APP INFO</Text>
+        {/* stats section */}
+        <Text style={s.sectionTitle}>Data</Text>
         <View style={s.card}>
-          <View style={s.settingRow}>
-            <View style={s.settingIconWrap}>
-              <Text style={s.settingIcon}>⬡</Text>
+          <TouchableOpacity style={s.row} onPress={() => router.push("/")}>
+            <View style={s.rowLeft}>
+              <View style={s.iconBox}>
+                <Ionicons name="heart" size={20} color="#14F195" />
+              </View>
+              <Text style={s.label}>Saved Wallets</Text>
             </View>
-            <View style={s.settingContent}>
-              <Text style={s.settingLabel}>Version</Text>
+            <View style={s.rowRight}>
+              <View style={s.badge}>
+                <Text style={s.badgeText}>{favorites.length}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#6B7280" />
             </View>
-            <Text style={s.settingValue}>1.0.0</Text>
-          </View>
+          </TouchableOpacity>
 
-          <View style={s.rowDivider} />
+          <View style={s.divider} />
 
-          <View style={s.settingRow}>
-            <View style={s.settingIconWrap}>
-              <Text style={s.settingIcon}>◈</Text>
+          <View style={s.row}>
+            <View style={s.rowLeft}>
+              <View style={s.iconBox}>
+                <Ionicons name="time" size={20} color="#14F195" />
+              </View>
+              <Text style={s.label}>Search History</Text>
             </View>
-            <View style={s.settingContent}>
-              <Text style={s.settingLabel}>Build</Text>
+            <View style={s.badge}>
+              <Text style={s.badgeText}>{searchHistory.length}</Text>
             </View>
-            <Text style={s.settingValue}>2026.02</Text>
-          </View>
-
-          <View style={s.rowDivider} />
-
-          <View style={s.settingRow}>
-            <View style={s.settingIconWrap}>
-              <Text style={s.settingIcon}>⊞</Text>
-            </View>
-            <View style={s.settingContent}>
-              <Text style={s.settingLabel}>Platform</Text>
-            </View>
-            <Text style={s.settingValue}>Expo</Text>
           </View>
         </View>
 
-        {/* Danger Zone */}
-        <Text style={s.sectionTitle}>ACCOUNT</Text>
+        {/* danger zone */}
+        <Text style={s.sectionTitle}>Danger Zone</Text>
         <TouchableOpacity
-          style={s.signOutBtn}
-          onPress={handleSignOut}
-          disabled={loading}
-          activeOpacity={0.7}
+          style={s.dangerButton}
+          onPress={() => {
+            Alert.alert(
+              "Clear History",
+              "This will remove all your search history. Favorites won't be affected.",
+              [
+                { text: "Cancel", style: "cancel" },
+                { text: "Clear", style: "destructive", onPress: clearHistory },
+              ],
+            )
+          }}
         >
-          {loading ? (
-            <ActivityIndicator color="#EF4444" />
-          ) : (
-            <Text style={s.signOutText}>Sign Out</Text>
-          )}
+          <Ionicons name="trash-outline" size={20} color="#EF4444" />
+          <Text style={s.dangerText}>Clear Search History</Text>
         </TouchableOpacity>
 
-        <View style={{ height: 80 }} />
+        <TouchableOpacity style={s.logoutButton} onPress={() => signOut()}>
+          <Ionicons name="log-out-outline" size={20} color="#E5E7EB" />
+          <Text style={s.logoutText}>Log Out</Text>
+        </TouchableOpacity>
+
+        <View style={{ height: 100 }} />
       </ScrollView>
     </SafeAreaView>
-  );
+  )
 }
-
-// ============================================
-// Styles — matching home page dark theme
-// ============================================
 
 const s = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#0D0D12',
+    backgroundColor: "#0D0D12",
   },
   scroll: {
     flex: 1,
     paddingHorizontal: 24,
     paddingTop: 16,
   },
-
-  // Header
   title: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 32,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 8,
-    letterSpacing: -0.5,
   },
   subtitle: {
-    color: '#6B7280',
+    color: "#6B7280",
     fontSize: 15,
-    marginBottom: 28,
-    fontWeight: '400',
+    marginBottom: 32,
   },
-
-  // Profile Card
-  profileCard: {
-    backgroundColor: '#16161D',
-    borderRadius: 24,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: '#2A2A35',
-    marginBottom: 28,
-  },
-  profileHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#9945FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-    shadowColor: '#9945FF',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  avatarText: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  profileInfo: {
-    flex: 1,
-  },
-  profileEmail: {
-    color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  profileMeta: {
-    color: '#6B7280',
-    fontSize: 13,
-    fontWeight: '400',
-  },
-
-  divider: {
-    height: 1,
-    backgroundColor: '#2A2A35',
-    marginBottom: 16,
-  },
-
-  // Info Rows
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  infoLabel: {
-    color: '#6B7280',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  idBadge: {
-    backgroundColor: '#1E1E28',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 8,
-  },
-  idText: {
-    color: '#9945FF',
-    fontSize: 13,
-    fontFamily: 'monospace',
-    fontWeight: '500',
-  },
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 20,
-  },
-  statusGreen: {
-    backgroundColor: 'rgba(20, 241, 149, 0.12)',
-  },
-  statusYellow: {
-    backgroundColor: 'rgba(250, 204, 21, 0.12)',
-  },
-  statusText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  statusGreenText: {
-    color: '#14F195',
-  },
-  statusYellowText: {
-    color: '#FACC15',
-  },
-  networkBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(20, 241, 149, 0.08)',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 20,
-  },
-  networkDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: '#14F195',
-    marginRight: 6,
-  },
-  networkText: {
-    color: '#14F195',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-
-  // Section Title
   sectionTitle: {
-    color: '#6B7280',
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 1.5,
+    color: "#6B7280",
+    fontSize: 13,
+    textTransform: "uppercase",
+    letterSpacing: 1,
     marginBottom: 12,
-    marginLeft: 4,
+    marginTop: 8,
   },
-
-  // Cards
   card: {
-    backgroundColor: '#16161D',
+    backgroundColor: "#16161D",
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#2A2A35',
-    marginBottom: 28,
-    overflow: 'hidden',
+    borderColor: "#2A2A35",
+    padding: 4,
+    marginBottom: 24,
   },
-
-  // Setting Rows
-  settingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 18,
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 14,
   },
-  settingIconWrap: {
-    width: 36,
-    height: 36,
+  rowLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  iconBox: {
+    width: 40,
+    height: 40,
     borderRadius: 10,
-    backgroundColor: '#1E1E28',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
+    backgroundColor: "#1E1E28",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  settingIcon: {
+  iconBoxDevnet: {
+    backgroundColor: "#2D2310",
+  },
+  label: {
     fontSize: 16,
-    color: '#9CA3AF',
+    color: "#FFFFFF",
+    fontWeight: "500",
   },
-  settingContent: {
-    flex: 1,
-  },
-  settingLabel: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  settingDesc: {
-    color: '#6B7280',
+  sublabel: {
     fontSize: 12,
-    fontWeight: '400',
+    color: "#6B7280",
     marginTop: 2,
   },
-  settingValue: {
-    color: '#6B7280',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  settingValueBadge: {
-    backgroundColor: '#1E1E28',
+  badge: {
+    backgroundColor: "#1E1E28",
     paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 8,
+    paddingVertical: 6,
+    borderRadius: 12,
   },
-  settingValueText: {
-    color: '#14F195',
-    fontSize: 13,
-    fontWeight: '600',
+  badgeText: {
+    color: "#14F195",
+    fontSize: 14,
+    fontWeight: "600",
   },
-
-  rowDivider: {
+  divider: {
     height: 1,
-    backgroundColor: '#2A2A35',
-    marginHorizontal: 18,
+    backgroundColor: "#2A2A35",
+    marginHorizontal: 14,
   },
-
-  // Sign Out
-  signOutBtn: {
-    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+  dangerButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#1A1215",
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.2)',
-    borderRadius: 14,
+    borderColor: "#3D2023",
     paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: 14,
   },
-  signOutText: {
-    color: '#EF4444',
+  dangerText: {
+    color: "#EF4444",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
-});
+  logoutButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#151821",
+    borderWidth: 1,
+    borderColor: "#2A2A35",
+    paddingVertical: 16,
+    borderRadius: 14,
+    marginTop: 16,
+  },
+  logoutText: {
+    color: "#E5E7EB",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  rowRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+})
