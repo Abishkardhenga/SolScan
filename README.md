@@ -1,84 +1,135 @@
-# Solscan
+# Solscan — Solana Wallet Explorer
 
-A production-ready React Native + Expo starter template for building SaaS applications. Clone, configure, and ship.
+A React Native mobile app built with Expo for exploring Solana wallets. Search any wallet address to view SOL balance, token holdings, transaction history, and real-time token market data.
+
+---
 
 ## Features
 
-- **Expo Router** - File-based routing with route groups
-- **Firebase Auth** - Email/password authentication
-- **NativeWind** - Tailwind CSS for React Native
-- **TanStack Query** - Data fetching and caching
-- **TypeScript** - Full type safety
-- **Dark Mode** - Automatic system preference support
-- **Onboarding** - Multi-step onboarding flow
-- **Navigation Guard** - Centralized routing logic
-- **UI Primitives** - Reusable components (Button, Input, Screen, Loader)
+### Wallet Search
+- Search any Solana wallet address on mainnet or devnet
+- Displays SOL balance and shortened wallet address
+- Stores up to 20 recent searches for quick re-access
+- Favorite wallets with a heart button
+
+### Token Holdings
+- Lists all SPL tokens held in the searched wallet
+- Shows token mint address and balance amount
+- Tap any token to open its detail screen
+
+### Token Details
+- Token logo, name, and symbol
+- Live price with 24h percentage change
+- Your holding balance and estimated USD value
+- Market data: Market Cap, FDV, 24h Volume, Liquidity
+- Contract address, network, and DEX info
+- Direct links to DexScreener and Solscan.io
+
+### Transaction History
+- Last 10 transactions for any searched wallet
+- Shows signature (shortened), time elapsed, and success/failure status
+- Tap to open any transaction on Solscan.io
+
+### Network Toggle
+- Switch between Mainnet and Devnet from home screen or settings
+- Visual indicator: green dot = mainnet, orange dot = devnet
+
+### Token Swap (UI)
+- Select "from" and "to" tokens with amount inputs
+- Displays balances and USD equivalents
+- Note: Swap execution is not yet connected to a DEX
+
+### Settings
+- View your account email and UID
+- Toggle network (Mainnet / Devnet)
+- View count of saved wallets and search history
+- Clear search history
+- Log out
+
+---
+
+## Screens
+
+| Screen | Route | Description |
+|---|---|---|
+| Onboarding | `/(public)/onboarding` | 3-step intro carousel, shown once on first launch |
+| Login | `/(public)/login` | Sign in with email and password |
+| Signup | `/(public)/signup` | Create a new account |
+| Home | `/(protected)/` | Wallet search, token list, transaction history |
+| Token Detail | `/(protected)/token/[mint]` | Live token price and market data |
+| Swap | `/(protected)/swap` | Token swap interface |
+| Settings | `/(protected)/settings` | Account info, network, history management |
+
+---
 
 ## Tech Stack
 
-- React Native (Expo)
-- Expo Router (file-based routing)
-- Firebase (Auth + Firestore)
-- NativeWind (Tailwind-style styling)
-- TanStack Query (data fetching & caching)
-- TypeScript (strict mode)
+| Category | Technology |
+|---|---|
+| Framework | React Native + Expo (SDK 54) |
+| Routing | Expo Router (file-based) |
+| Authentication | Firebase Auth (email/password) |
+| Blockchain Data | Solana JSON-RPC (direct calls, no backend) |
+| Token Market Data | DexScreener API (free, no API key) |
+| State Management | Zustand |
+| Server State | TanStack React Query |
+| Styling | StyleSheet + NativeWind (Tailwind) |
+| Storage | AsyncStorage |
+| Icons | Expo Vector Icons (Ionicons) |
+
+---
 
 ## Project Structure
 
 ```
-├── app/
-│   ├── _layout.tsx              # Root layout with providers
-│   ├── +not-found.tsx           # 404 screen
-│   ├── (public)/                # Public routes
-│   │   ├── onboarding.tsx
-│   │   ├── login.tsx
-│   │   └── signup.tsx
-│   └── (protected)/             # Protected routes
-│       ├── index.tsx            # Home
-│       ├── profile.tsx
-│       └── settings.tsx
-│
-├── src/
-│   ├── components/ui/           # UI primitives
-│   ├── providers/               # Context providers
-│   ├── hooks/                   # Custom hooks
-│   ├── services/                # Firebase, storage
-│   ├── lib/                     # Query client config
-│   └── types/                   # TypeScript types
-│
-├── tailwind.config.js           # Design tokens
-└── app.json                     # Expo configuration
+app/
+├── _layout.tsx               # Root layout with providers
+├── +not-found.tsx            # 404 screen
+├── (public)/                 # Unauthenticated screens
+│   ├── onboarding.tsx
+│   ├── login.tsx
+│   └── signup.tsx
+└── (protected)/              # Authenticated screens (tab navigator)
+    ├── index.tsx             # Home — wallet search
+    ├── swap.tsx              # Token swap
+    ├── settings.tsx          # Settings
+    └── token/[mint].tsx      # Dynamic token detail page
+
+src/
+├── components/
+│   ├── ui/                   # Button, Input, Screen, Loader
+│   └── FavouriteButton.tsx   # Heart button for saving wallets
+├── hooks/                    # useAuth, useOnboarding, useColorScheme
+├── providers/                # AuthProvider, NavigationGuard, QueryProvider
+├── services/                 # Firebase config, AsyncStorage helpers
+├── stores/
+│   └── wallet-store.ts       # Zustand: favorites, search history, network
+├── lib/
+│   └── queryClient.ts        # React Query configuration
+└── types/                    # TypeScript type definitions
 ```
+
+---
 
 ## Getting Started
 
-### 1. Clone the Template
+### Prerequisites
+
+- Node.js 18+
+- Expo CLI: `npm install -g expo-cli`
+- iOS Simulator (macOS), Android Emulator, or Expo Go app
+
+### Installation
 
 ```bash
-git clone <your-repo-url>
-cd expo-saas-starter
-```
-
-### 2. Install Dependencies
-
-```bash
+git clone <repo-url>
+cd Solscan
 npm install
 ```
 
-### 3. Set Up Firebase
+### Environment Variables
 
-1. Create a new Firebase project at [Firebase Console](https://console.firebase.google.com/)
-2. Enable Email/Password authentication in Firebase Console
-3. Create a Firestore database
-4. Copy your Firebase config
-
-### 4. Configure Environment Variables
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` and add your Firebase credentials:
+Create a `.env` file in the project root:
 
 ```env
 EXPO_PUBLIC_FIREBASE_API_KEY=your_api_key
@@ -89,134 +140,75 @@ EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 EXPO_PUBLIC_FIREBASE_APP_ID=your_app_id
 ```
 
-### 5. Update App Configuration
+To get these values:
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Create a project and enable Email/Password authentication
+3. Go to Project Settings > Your Apps > Web App config
 
-Edit `app.json`:
-
-- Change `name` to your app name
-- Change `slug` to your app slug
-- Update `bundleIdentifier` (iOS) and `package` (Android)
-- Update `scheme` for deep linking
-
-### 6. Start Development
+### Run
 
 ```bash
-npm start
+npx expo start
 ```
 
 Then press:
-- `i` for iOS simulator
-- `a` for Android emulator
-- `w` for web
+- `i` — iOS simulator
+- `a` — Android emulator
+- `w` — web browser
 
-## App Flow
+---
 
-### First Launch Flow
+## APIs Used
 
-1. **Splash Screen** - Shows while checking auth state
-2. **Onboarding** - Multi-step onboarding (if not completed)
-3. **Auth Screens** - Login/Signup (if not authenticated)
-4. **App Screens** - Protected home screen (if authenticated)
+### Solana JSON-RPC
+Direct calls to Solana nodes. No API key required.
 
-### Navigation Logic
+| Method | Purpose |
+|---|---|
+| `getBalance` | SOL balance for a wallet address |
+| `getTokenAccountsByOwner` | All SPL token accounts owned by a wallet |
+| `getSignaturesForAddress` | Last 10 transaction signatures |
 
-The `NavigationGuard` component handles all routing logic:
+- Mainnet: `https://api.mainnet-beta.solana.com`
+- Devnet: `https://api.devnet.solana.com`
 
-- If onboarding NOT completed → show onboarding
-- If onboarding completed but NOT logged in → show auth screens
-- If logged in → show protected app screens
+### DexScreener API
+Free, no authentication required.
 
-This logic is centralized in `src/providers/NavigationGuard.tsx`.
+- Endpoint: `https://api.dexscreener.com/latest/dex/tokens/{mint}`
+- Returns: price, 24h change, market cap, FDV, volume, liquidity
 
-## Customization Guide
+---
 
-### 1. Branding & Colors
+## Navigation Flow
 
-Edit `tailwind.config.js` to update your color scheme:
-
-```js
-colors: {
-  primary: {
-    // Your brand colors
-  },
-}
+```
+App Start
+  └── Check onboarding (AsyncStorage)
+        ├── First launch → Onboarding → Signup
+        └── Returning user
+              ├── Not logged in → Login
+              └── Logged in → Home
+                    ├── Home (Wallet Search + Tokens + Transactions)
+                    ├── Swap
+                    ├── Settings
+                    └── Token Detail (tap any token from the list)
 ```
 
-### 2. Onboarding Content
+Auth state is managed by Firebase and persisted across app restarts via AsyncStorage.
 
-Edit `app/(public)/onboarding.tsx` to customize onboarding steps.
+---
 
-### 3. Navigation Tabs
+## Known Limitations
 
-Edit `app/(protected)/_layout.tsx` to add/remove tabs.
+- Favorited wallets are stored in memory only and lost on app restart (Firebase sync not yet implemented)
+- Token swap UI is not connected to any DEX
+- No format validation for Solana address input
+- Public Solana RPC endpoints are subject to rate limiting under heavy use
 
-### 4. UI Components
-
-All UI primitives are in `src/components/ui/`:
-- `Button.tsx` - Primary, secondary, outline variants
-- `Input.tsx` - Text input with label and error states
-- `Screen.tsx` - Safe area wrapper with scroll support
-- `Loader.tsx` - Loading indicator
-
-### 5. Add Icons
-
-Install an icon library:
-
-```bash
-npx expo install @expo/vector-icons
-```
-
-Update the TabIcon component in `app/(protected)/_layout.tsx`.
-
-## Data Fetching with TanStack Query
-
-Example usage pattern:
-
-```typescript
-import { useQuery } from '@tanstack/react-query';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/services/firebase';
-
-export function useItems() {
-  return useQuery({
-    queryKey: ['items'],
-    queryFn: async () => {
-      const snapshot = await getDocs(collection(db, 'items'));
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-    },
-  });
-}
-```
-
-## Firebase Security Rules
-
-Don't forget to set up Firestore security rules:
-
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if request.auth != null;
-    }
-  }
-}
-```
+---
 
 ## Building for Production
-
-### iOS
-
-1. Configure `app.json` with your bundle identifier
-2. Run: `npx expo run:ios --configuration Release`
-
-### Android
-
-1. Configure `app.json` with your package name
-2. Run: `npx expo run:android --variant release`
 
 ### Using EAS Build
 
@@ -226,109 +218,31 @@ eas login
 eas build --platform all
 ```
 
-## Scripts
+### Local builds
 
-- `npm start` - Start Expo dev server
-- `npm run ios` - Start iOS simulator
-- `npm run android` - Start Android emulator
-- `npm run web` - Start web development
-- `npm run lint` - Run ESLint
-- `npm run type-check` - Run TypeScript type checking
+```bash
+# iOS
+npx expo run:ios --configuration Release
 
-## Architecture Decisions
-
-### Why Route Groups?
-
-Route groups `(public)` and `(protected)` allow for:
-- Different layouts for auth vs app screens
-- Clean URL structure
-- Easy navigation guard implementation
-
-### Why Firebase?
-
-- Zero backend setup
-- Built-in auth
-- Real-time database
-- Easy scaling
-
-### Why NativeWind?
-
-- Familiar Tailwind syntax
-- No StyleSheet boilerplate
-- Easy dark mode support
-- Consistent spacing/colors
-
-### Why TanStack Query?
-
-- Automatic caching
-- Background refetching
-- Optimistic updates
-- Less boilerplate than Redux
-
-## Common Tasks
-
-### Reset Onboarding
-
-```typescript
-import { clearOnboardingStatus } from '@/services/storage';
-await clearOnboardingStatus();
+# Android
+npx expo run:android --variant release
 ```
 
-### Add a New Screen
-
-1. Create file in `app/(protected)/` or `app/(public)/`
-2. Use the `Screen` component as wrapper
-3. Add to navigation if needed
-
-### Change Auth Provider
-
-Edit `src/services/firebase.ts` and `src/hooks/useAuth.tsx` to add:
-- Google Sign-In
-- Apple Sign-In
-- Phone Auth
-- etc.
+---
 
 ## Troubleshooting
 
-### Metro bundler issues
-
 ```bash
+# Clear Metro cache
 npx expo start -c
-```
 
-### TypeScript errors
-
-```bash
-npm run type-check
-```
-
-### Clear all caches
-
-```bash
+# Clear all caches
 rm -rf node_modules .expo
 npm install
 ```
 
-## Production Checklist
-
-- [ ] Update Firebase config with production credentials
-- [ ] Set up Firestore security rules
-- [ ] Update app.json with correct bundle IDs
-- [ ] Add app icons and splash screen
-- [ ] Test on both iOS and Android
-- [ ] Set up error tracking (Sentry, etc.)
-- [ ] Configure analytics
-- [ ] Test offline behavior
-- [ ] Review and optimize bundle size
+---
 
 ## License
 
 MIT
-
-## Support
-
-For issues and questions, please open a GitHub issue.
-
----
-
-Built with speed and scalability in mind. Clone, configure, ship.
